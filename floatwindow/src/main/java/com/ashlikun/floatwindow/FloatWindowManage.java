@@ -232,10 +232,10 @@ public class FloatWindowManage {
         }
         mWindowManager.updateViewLayout(mFloatView, mLayoutParams);
         if (isSaveData) {
-            saveLocation(x, y);
+            saveLocation(mX, mY);
         }
         if (mBuilder.mViewStateListener != null) {
-            mBuilder.mViewStateListener.onPositionUpdate(x, y);
+            mBuilder.mViewStateListener.onPositionUpdate(mX, mY);
         }
 
     }
@@ -248,7 +248,7 @@ public class FloatWindowManage {
      */
     public void saveLocation(int x, int y) {
         if (mBuilder.mViewStateListener != null) {
-            mBuilder.mViewStateListener.onSaveLocation(x, y);
+            mBuilder.mViewStateListener.onSaveLocation(x == -1 ? mX : x, y == -1 ? mY : y);
         }
     }
 

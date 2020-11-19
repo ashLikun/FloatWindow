@@ -59,6 +59,8 @@ public class BaseApplication extends Application {
                             .setMoveType(MoveType.SLIDE_LEFT)
                             .setMoveStyle(500, new BounceInterpolator())
                             .setDesktopWindow(true)
+                            .setX(0)
+                            .setY(0)
                             .setViewStateListener(mViewStateListener)
                             .build();
                 }
@@ -147,7 +149,7 @@ public class BaseApplication extends Application {
 
         @Override
         public void onSaveLocation(int x, int y) {
-
+            Log.d(TAG, "onSaveLocation: x=" + x + " y=" + y);
         }
     };
 }
