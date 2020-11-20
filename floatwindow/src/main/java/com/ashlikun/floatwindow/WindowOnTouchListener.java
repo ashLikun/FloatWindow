@@ -24,6 +24,8 @@ public class WindowOnTouchListener implements View.OnTouchListener {
     FloatWindow.Builder mBuilder;
     private float downX;
     private float downY;
+    private float downRawX;
+    private float downRawY;
     private float upX;
     private float upY;
     private int mSlop;
@@ -46,12 +48,14 @@ public class WindowOnTouchListener implements View.OnTouchListener {
                 onMove = false;
                 downX = event.getX();
                 downY = event.getY();
+                downRawX = event.getRawX();
+                downRawY = event.getRawY();
                 isStartMoveCallback = false;
                 isIntercept = false;
                 break;
             case MotionEvent.ACTION_MOVE:
                 //在一些dpi较高的设备上点击view很容易触发 ACTION_MOVE，所以此处做一个过滤
-                isIntercept = (Math.abs(event.getRawX() - downX) > mSlop) || (Math.abs(event.getRawY() - downY) > mSlop);
+                isIntercept = (Math.abs(event.getRawX() - downRawX) > mSlop) || (Math.abs(event.getRawY() - downRawY) > mSlop);
                 break;
             default:
                 break;
