@@ -30,7 +30,7 @@ public class WindowOnTouchListener implements View.OnTouchListener {
     private float upY;
     private int mSlop;
     private boolean isStartMoveCallback;
-
+    private boolean isMove = false;
     private ValueAnimator mAnimator;
     private TimeInterpolator mDecelerateInterpolator;
 
@@ -41,24 +41,27 @@ public class WindowOnTouchListener implements View.OnTouchListener {
     }
 
     public boolean onInterceptTouchEvent(View v, MotionEvent event) {
-        boolean isIntercept = false;
+
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
+                isMove = false;
                 downX = event.getX();
                 downY = event.getY();
                 downRawX = event.getRawX();
                 downRawY = event.getRawY();
                 isStartMoveCallback = false;
-                isIntercept = false;
+                if (mAnimator != null) {
+                    mAnimator.cancel();
+                }
                 break;
             case MotionEvent.ACTION_MOVE:
                 //在一些dpi较高的设备上点击view很容易触发 ACTION_MOVE，所以此处做一个过滤
-                isIntercept = (Math.abs(event.getRawX() - downRawX) > mSlop) || (Math.abs(event.getRawY() - downRawY) > mSlop);
+                isMove = (Math.abs(event.getRawX() - downRawX) > mSlop) || (Math.abs(event.getRawY() - downRawY) > mSlop);
                 break;
             default:
                 break;
         }
-        return isIntercept;
+        return isMove;
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -66,75 +69,88 @@ public class WindowOnTouchListener implements View.OnTouchListener {
     public boolean onTouch(View v, MotionEvent event) {
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
+                isMove = false;
                 downX = event.getX();
                 downY = event.getY();
-                cancelAnimator();
+                downRawX = event.getRawX();
+                downRawY = event.getRawY();
+                if (mAnimator != null) {
+                    mAnimator.cancel();
+                }
                 break;
             case MotionEvent.ACTION_MOVE:
                 int changeX = (int) (event.getRawX() - downX);
                 int changeY = (int) (event.getRawY() - downY);
-                floatWindowManage.updateLocation(changeX, changeY, true);
-                if (!isStartMoveCallback) {
-                    isStartMoveCallback = true;
-                    //回调移动开始
-                    if (mBuilder.mViewStateListener != null) {
-                        mBuilder.mViewStateListener.onMoveStart(floatWindowManage.getView().getView());
+                if (!isMove) {
+                    //在一些dpi较高的设备上点击view很容易触发 ACTION_MOVE，所以此处做一个过滤
+                    isMove = (Math.abs(event.getRawX() - downRawX) > mSlop) || (Math.abs(event.getRawY() - downRawY) > mSlop);
+                }
+                if (isMove) {
+                    floatWindowManage.updateLocation(changeX, changeY, true);
+                    if (!isStartMoveCallback) {
+                        isStartMoveCallback = true;
+                        //回调移动开始
+                        if (mBuilder.mViewStateListener != null) {
+                            mBuilder.mViewStateListener.onMoveStart(floatWindowManage.getView().getView());
+                        }
                     }
                 }
                 break;
             case MotionEvent.ACTION_UP:
-                upX = event.getRawX();
-                upY = event.getRawY();
-                if (isStartMoveCallback) {
-                    //回调移动结束
-                    if (mBuilder.mViewStateListener != null) {
-                        mBuilder.mViewStateListener.onMoveEnd(floatWindowManage.getView().getView());
-                    }
-                }
-                switch (mBuilder.mMoveType) {
-                    case MoveType.SLIDE_ALL:
-                    case MoveType.SLIDE_LEFT:
-                    case MoveType.SLIDE_RIGHT:
-                        int startX = floatWindowManage.getX();
-                        int endX = 0;
-                        if (mBuilder.mMoveType == MoveType.SLIDE_ALL) {
-                            endX = (startX * 2 + v.getWidth() > Util.getScreenWidth(mBuilder.mApplicationContext)) ?
-                                    Util.getScreenWidth(mBuilder.mApplicationContext) - v.getWidth() - mBuilder.mSlideRightMargin :
-                                    mBuilder.mSlideLeftMargin;
-                        } else if (mBuilder.mMoveType == MoveType.SLIDE_LEFT) {
-                            endX = mBuilder.mSlideLeftMargin;
-                        } else {
-                            endX = Util.getScreenWidth(mBuilder.mApplicationContext) - v.getWidth() - mBuilder.mSlideRightMargin;
+                if (isMove) {
+                    upX = event.getRawX();
+                    upY = event.getRawY();
+                    if (isStartMoveCallback) {
+                        //回调移动结束
+                        if (mBuilder.mViewStateListener != null) {
+                            mBuilder.mViewStateListener.onMoveEnd(floatWindowManage.getView().getView());
                         }
-                        floatWindowManage.saveLocation(endX, -1);
-                        mAnimator = ObjectAnimator.ofInt(startX, endX);
-                        mAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-                            @Override
-                            public void onAnimationUpdate(ValueAnimator animation) {
-                                int x = (int) animation.getAnimatedValue();
-                                floatWindowManage.updateLocation(x, -1, false);
+                    }
+                    switch (mBuilder.mMoveType) {
+                        case MoveType.SLIDE_ALL:
+                        case MoveType.SLIDE_LEFT:
+                        case MoveType.SLIDE_RIGHT:
+                            int startX = floatWindowManage.getX();
+                            int endX = 0;
+                            if (mBuilder.mMoveType == MoveType.SLIDE_ALL) {
+                                endX = (startX * 2 + v.getWidth() > Util.getScreenWidth(mBuilder.mApplicationContext)) ?
+                                        Util.getScreenWidth(mBuilder.mApplicationContext) - v.getWidth() - mBuilder.mSlideRightMargin :
+                                        mBuilder.mSlideLeftMargin;
+                            } else if (mBuilder.mMoveType == MoveType.SLIDE_LEFT) {
+                                endX = mBuilder.mSlideLeftMargin;
+                            } else {
+                                endX = Util.getScreenWidth(mBuilder.mApplicationContext) - v.getWidth() - mBuilder.mSlideRightMargin;
+                            }
+                            floatWindowManage.saveLocation(endX, -1);
+                            mAnimator = ObjectAnimator.ofInt(startX, endX);
+                            mAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+                                @Override
+                                public void onAnimationUpdate(ValueAnimator animation) {
+                                    int x = (int) animation.getAnimatedValue();
+                                    floatWindowManage.updateLocation(x, -1, false);
 
-                            }
-                        });
-                        startAnimator();
-                        break;
-                    case MoveType.BACK:
-                        PropertyValuesHolder pvhX = PropertyValuesHolder.ofInt("x", floatWindowManage.getX(), mBuilder.xOffset);
-                        PropertyValuesHolder pvhY = PropertyValuesHolder.ofInt("y", floatWindowManage.getY(), mBuilder.yOffset);
-                        floatWindowManage.saveLocation(mBuilder.xOffset, mBuilder.yOffset);
-                        mAnimator = ObjectAnimator.ofPropertyValuesHolder(pvhX, pvhY);
-                        mAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-                            @Override
-                            public void onAnimationUpdate(ValueAnimator animation) {
-                                int x = (int) animation.getAnimatedValue("x");
-                                int y = (int) animation.getAnimatedValue("y");
-                                floatWindowManage.updateLocation(x, y, false);
-                            }
-                        });
-                        startAnimator();
-                        break;
-                    default:
-                        break;
+                                }
+                            });
+                            startAnimator();
+                            break;
+                        case MoveType.BACK:
+                            PropertyValuesHolder pvhX = PropertyValuesHolder.ofInt("x", floatWindowManage.getX(), mBuilder.xOffset);
+                            PropertyValuesHolder pvhY = PropertyValuesHolder.ofInt("y", floatWindowManage.getY(), mBuilder.yOffset);
+                            floatWindowManage.saveLocation(mBuilder.xOffset, mBuilder.yOffset);
+                            mAnimator = ObjectAnimator.ofPropertyValuesHolder(pvhX, pvhY);
+                            mAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+                                @Override
+                                public void onAnimationUpdate(ValueAnimator animation) {
+                                    int x = (int) animation.getAnimatedValue("x");
+                                    int y = (int) animation.getAnimatedValue("y");
+                                    floatWindowManage.updateLocation(x, y, false);
+                                }
+                            });
+                            startAnimator();
+                            break;
+                        default:
+                            break;
+                    }
                 }
                 break;
             default:

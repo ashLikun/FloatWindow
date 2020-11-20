@@ -43,6 +43,10 @@ import java.util.Map;
  * 	4:销毁
  *
  * 		FloatWindow.get().destroy();
+ *
+ *
+ * 	5:  在移动开始和过程和结束的时候不要改变window大小，这样会卡顿
+ *
  */
 
 public class FloatWindow {
