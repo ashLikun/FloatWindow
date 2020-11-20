@@ -23,32 +23,33 @@ public class BaseApplication extends Application {
 
 
     private static final String TAG = "FloatWindow";
+    public FrameLayout layout = null;
+    ImageView imageView;
+
+    public FrameLayout initView() {
+        if (layout == null) {
+            layout = new FrameLayout(getApplicationContext());
+            layout.setLayoutParams(new FrameLayout.LayoutParams(200, 200));
+            imageView = new ImageView(getApplicationContext());
+            imageView.setImageResource(R.drawable.icon);
+            imageView.setScaleType(ImageView.ScaleType.FIT_XY);
+            layout.addView(imageView, new FrameLayout.LayoutParams(-1, -1));
+            layout.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+
+                }
+            });
+        }
+        return layout;
+    }
 
     @Override
     public void onCreate() {
         super.onCreate();
 
         registerActivityLifecycleCallbacks(new ActivityLifecycleCallbacks() {
-            public FrameLayout layout = null;
 
-            public FrameLayout initView() {
-                if (layout == null) {
-                    layout = new FrameLayout(getApplicationContext());
-                    layout.setLayoutParams(new FrameLayout.LayoutParams(200, 200));
-                    final ImageView imageView = new ImageView(getApplicationContext());
-                    imageView.setImageResource(R.drawable.icon);
-                    imageView.setScaleType(ImageView.ScaleType.FIT_XY);
-                    layout.addView(imageView, new FrameLayout.LayoutParams(-1, -1));
-                    layout.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            layout.getLayoutParams().width = 400;
-                            imageView.requestLayout();
-                        }
-                    });
-                }
-                return layout;
-            }
 
             @Override
             public void onActivityCreated(Activity activity, Bundle savedInstanceState) {
@@ -60,7 +61,9 @@ public class BaseApplication extends Application {
                             .setMoveStyle(500, new BounceInterpolator())
                             .setDesktopWindow(true)
                             .setX(0)
-                            .setY(0)
+                            .setWidth(600)
+                            .setHeight(600)
+                            .setY(300)
                             .setViewStateListener(mViewStateListener)
                             .build();
                 }
@@ -138,11 +141,13 @@ public class BaseApplication extends Application {
 
         @Override
         public void onMoveStart(View contentView) {
+            FloatWindow.get().setSize(400,400);
             Log.e("aaaaaaaaa", "onMoveStart");
         }
 
         @Override
         public void onMoveEnd(View contentView) {
+            FloatWindow.get().setSize(200,200);
             Log.e("aaaaaaaaa", "onMoveEnd");
         }
 

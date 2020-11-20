@@ -22,6 +22,7 @@ public class FloatView extends FrameLayout {
         this.floatWindowManage = floatWindowManage;
         addContentView(contentView);
         initTouchEvent();
+
     }
 
     /**
@@ -48,8 +49,10 @@ public class FloatView extends FrameLayout {
         switch (floatWindowManage.mBuilder.mMoveType) {
             case MoveType.IN_ACTIVE:
                 break;
-            default:
+            default: {
                 touchListener = new WindowOnTouchListener(floatWindowManage.mBuilder, floatWindowManage);
+                setOnTouchListener(touchListener);
+            }
         }
     }
 
@@ -67,13 +70,6 @@ public class FloatView extends FrameLayout {
         return super.onInterceptTouchEvent(ev);
     }
 
-    @Override
-    public boolean onTouchEvent(MotionEvent event) {
-        if (touchListener != null && touchListener.onTouch(this, event)) {
-            return true;
-        }
-        return super.onTouchEvent(event);
-    }
 
     public View getView() {
         return mView;

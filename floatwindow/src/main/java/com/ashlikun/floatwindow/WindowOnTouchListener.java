@@ -30,7 +30,6 @@ public class WindowOnTouchListener implements View.OnTouchListener {
     private float upY;
     private int mSlop;
     private boolean isStartMoveCallback;
-    private boolean onMove;
 
     private ValueAnimator mAnimator;
     private TimeInterpolator mDecelerateInterpolator;
@@ -45,7 +44,6 @@ public class WindowOnTouchListener implements View.OnTouchListener {
         boolean isIntercept = false;
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
-                onMove = false;
                 downX = event.getX();
                 downY = event.getY();
                 downRawX = event.getRawX();
@@ -68,7 +66,6 @@ public class WindowOnTouchListener implements View.OnTouchListener {
     public boolean onTouch(View v, MotionEvent event) {
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
-                onMove = false;
                 downX = event.getX();
                 downY = event.getY();
                 cancelAnimator();
@@ -77,8 +74,7 @@ public class WindowOnTouchListener implements View.OnTouchListener {
                 int changeX = (int) (event.getRawX() - downX);
                 int changeY = (int) (event.getRawY() - downY);
                 floatWindowManage.updateLocation(changeX, changeY, true);
-                onMove = (Math.abs(upX - downX) > mSlop) || (Math.abs(upY - downY) > mSlop);
-                if (onMove && !isStartMoveCallback) {
+                if (!isStartMoveCallback) {
                     isStartMoveCallback = true;
                     //回调移动开始
                     if (mBuilder.mViewStateListener != null) {
@@ -144,7 +140,7 @@ public class WindowOnTouchListener implements View.OnTouchListener {
             default:
                 break;
         }
-        return onMove;
+        return true;
     }
 
 
